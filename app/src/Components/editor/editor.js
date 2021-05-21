@@ -27,10 +27,10 @@ export default class Editor extends Component {
     }
 
     open(page) {
-        this.currentPage = `../${page}?rnd=${Math.random()}`
+        this.currentPage = page
 
         axios
-            .get(`../${page}`)
+            .get(`../${page}?rnd=${Math.random()}`)
             .then(res => this.parseStringToDOM(res.data))
             .then(this.wrapTextNodes)
             .then(dom => {
@@ -41,6 +41,14 @@ export default class Editor extends Component {
             .then(html => axios.post('./api/saveTempPage.php', {html}))
             .then(() => this.iframe.load('../temp.html'))
             .then(() => this.enableEditing())
+    }
+
+    save() {
+        const newDom = this.virtualDom.cloneNode(this.virtualDom)
+        this.unwrapTextNode(newDom)
+        const html = this.serializeDomToString(newDom)
+        axios
+            .post('./api/savePage.php', {pageName: this.currentPage, html})
     }
 
     enableEditing() {
@@ -56,7 +64,7 @@ export default class Editor extends Component {
 
     onTextEdit(element) {
         const id = element.getAttribute('nodeid')
-        this.virtualDom.body.querySelector(`[nodeid="${id}"]`).innerHTML =element.innerHTML
+        this.virtualDom.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML
     }
 
     wrapTextNodes(dom) {
@@ -89,7 +97,12 @@ export default class Editor extends Component {
     serializeDomToString(dom) {
         const serializer = new XMLSerializer()
         return serializer.serializeToString(dom)
+    }
 
+    unwrapTextNode(dom) {
+        dom.body.querySelectorAll('text-editor').forEach(element => {
+            element.parentNode.replaceChild(element.firstChild, element)
+        })
     }
 
     loadPageList() {
@@ -127,7 +140,11 @@ export default class Editor extends Component {
         // })
 
         return (
-            <iframe src={this.currentPage} frameBorder="0"/>
+            <>
+                <button onClick={() => this.save()}>Click</button>
+                <iframe src={this.currentPage} frameBorder="0"/>
+            </>
+
             // <>
             //     <input onChange={(e) => {
             //         this.setState({newPageName: e.target.value})
