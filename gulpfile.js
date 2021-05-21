@@ -5,7 +5,7 @@ const sass = require('gulp-sass')
 const dist = '/usr/local/var/www/spa-admin-panel/admin'
 
 gulp.task('copy-html', () => {
-    return gulp.src('./app/src/index.html')
+    return gulp.src('./app/src/**/*.html')
         .pipe(gulp.dest(dist))
 })
 
@@ -43,18 +43,18 @@ gulp.task('build-js', () => {
         .pipe(gulp.dest(dist))
 })
 
-gulp.task('build-sass', async () => {
+gulp.task('build-sass', () => {
     gulp.src('./app/scss/style.scss')
         .pipe(sass().on('error', sass.logError))
         .pipe(gulp.dest(dist))
 })
 
-gulp.task('copy-api', async () => {
+gulp.task('copy-api', () => {
     gulp.src('./app/api/**/*.*')
         .pipe(gulp.dest(dist + '/api'))
 })
 
-gulp.task('copy-assets', async () => {
+gulp.task('copy-assets', () => {
     gulp.src('./app/assets/**/*.*')
         .pipe(gulp.dest(dist + '/assets'))
 })
