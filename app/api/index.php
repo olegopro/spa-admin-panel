@@ -1,6 +1,6 @@
 <?php
 
-$htmlFiles = glob('../../*.html');
+$htmlFiles = glob('../*.html');
 $response = [];
 
 foreach ($htmlFiles as $file) {
@@ -8,3 +8,4 @@ foreach ($htmlFiles as $file) {
 }
 
 echo json_encode($response);
+
