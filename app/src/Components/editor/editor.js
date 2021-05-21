@@ -1,6 +1,7 @@
+import '../../helpers/iframeLoader.js'
 import axios from 'axios'
 import React, {Component} from 'react'
-import '../../helpers/iframeLoader.js'
+import DOMHelper from '../../helpers/dom-helper'
 
 export default class Editor extends Component {
     constructor() {
@@ -21,23 +22,18 @@ export default class Editor extends Component {
         this.loadPageList()
     }
 
-    parseStringToDOM(str) {
-        const parser = new DOMParser()
-        return parser.parseFromString(str, "text/html")
-    }
-
     open(page) {
         this.currentPage = page
 
         axios
             .get(`../${page}?rnd=${Math.random()}`)
-            .then(res => this.parseStringToDOM(res.data))
-            .then(this.wrapTextNodes)
+            .then(res => DOMHelper.parseStringToDOM(res.data))
+            .then(DOMHelper.wrapTextNodes)
             .then(dom => {
                 this.virtualDom = dom
                 return dom
             })
-            .then(this.serializeDomToString)
+            .then(DOMHelper.serializeDomToString)
             .then(html => axios.post('./api/saveTempPage.php', {html}))
             .then(() => this.iframe.load('../temp.html'))
             .then(() => this.enableEditing())
@@ -45,8 +41,8 @@ export default class Editor extends Component {
 
     save() {
         const newDom = this.virtualDom.cloneNode(this.virtualDom)
-        this.unwrapTextNode(newDom)
-        const html = this.serializeDomToString(newDom)
+        DOMHelper.unwrapTextNode(newDom)
+        const html = DOMHelper.serializeDomToString(newDom)
         axios
             .post('./api/savePage.php', {pageName: this.currentPage, html})
     }
@@ -67,43 +63,6 @@ export default class Editor extends Component {
         this.virtualDom.body.querySelector(`[nodeid="${id}"]`).innerHTML = element.innerHTML
     }
 
-    wrapTextNodes(dom) {
-        const body = dom.body
-        let textNodes = []
-
-        function recursy(element) {
-            element.childNodes.forEach(node => {
-
-                if (node.nodeName === '#text' && node.nodeValue.replace(/\s+/g, '').length > 0) {
-                    textNodes.push(node)
-                } else {
-                    recursy(node)
-                }
-            })
-        }
-
-        recursy(body)
-
-        textNodes.forEach((node, i) => {
-            const wrapper = dom.createElement('text-editor')
-            node.parentNode.replaceChild(wrapper, node)
-            wrapper.appendChild(node)
-            wrapper.setAttribute('nodeid', i)
-        })
-
-        return dom
-    }
-
-    serializeDomToString(dom) {
-        const serializer = new XMLSerializer()
-        return serializer.serializeToString(dom)
-    }
-
-    unwrapTextNode(dom) {
-        dom.body.querySelectorAll('text-editor').forEach(element => {
-            element.parentNode.replaceChild(element.firstChild, element)
-        })
-    }
 
     loadPageList() {
         axios
