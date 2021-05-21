@@ -29,11 +29,20 @@ export default class Editor extends Component {
             .catch(() => alert('Страница существует'))
     }
 
+    deletePage(page) {
+        axios
+            .post('./api/deletePage.php', {'name': page})
+            .then(this.loadPageList())
+            .catch(() => alert('Страницы не существует'))
+    }
+
     render() {
         const {pageList} = this.state
         const pages = pageList.map((page, i) => {
             return (
-                <h1 key={i}>{page}</h1>
+                <h1 key={i}>{page}
+                    <a onClick={() => this.deletePage(page)} href="#">(x)</a>
+                </h1>
             )
         })
         return (
