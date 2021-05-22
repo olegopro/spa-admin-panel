@@ -1,3 +1,2 @@
-import EditorText from './editor-text'
-
-export default EditorText
+import EditorText from './editor-text';
+export default EditorText;

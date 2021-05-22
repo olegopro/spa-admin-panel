@@ -34,7 +34,7 @@ export default class Editor extends Component {
         this.currentPage = page
 
         axios
-            .get(`../${page}`)
+            .get(`../${page}?rnd=${Math.random()}`)
             .then(res => DOMHelper.parseStrToDOM(res.data))
             .then(DOMHelper.wrapTextNodes)
             .then(dom => {
@@ -126,9 +126,9 @@ export default class Editor extends Component {
 
         return (
             <>
-                <iframe src={this.currentPage} frameBorder="0"/>
+                <iframe src={this.currentPage} frameBorder="0"></iframe>
 
-                {/*{spinner}*/}
+                {spinner}
 
                 <div className="panel">
                     <button className="uk-button uk-button-primary" uk-toggle="target: #modal-save">Опубликовать</button>
