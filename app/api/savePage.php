@@ -2,7 +2,7 @@
 
 $_POST = json_decode(file_get_contents('php://input'), true);
 
-$file = '../../' . $_POST['pageName'];
+$file = "../../" . $_POST["pageName"];
 $newHTML = $_POST['html'];
 
 if ($newHTML && $file) {

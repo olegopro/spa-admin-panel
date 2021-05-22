@@ -1,9 +1,9 @@
 <?php
 
-$htmlFiles = glob('../*.html');
+$htmlfiles = glob("../../*.html");
 $response = [];
 
-foreach ($htmlFiles as $file) {
+foreach ($htmlfiles as $file) {
     array_push($response, basename($file));
 }
 
