@@ -1,12 +1,15 @@
 import axios from 'axios'
 
 export default class EditorImages {
-    constructor(element, virtualElement) {
+    constructor(element, virtualElement, ...[isLoading, isLoaded, showNotifications]) {
         this.element = element
         this.virtualElement = virtualElement
 
         this.element.addEventListener('click', () => this.onClick())
         this.imgUploader = document.querySelector('#img-upload')
+        this.isLoading = isLoading
+        this.isLoaded = isLoaded
+        this.showNotifications = showNotifications
     }
 
     onClick() {
@@ -15,6 +18,7 @@ export default class EditorImages {
             if (this.imgUploader.files && this.imgUploader.files[0]) {
                 let formData = new FormData()
                 formData.append('image', this.imgUploader.files[0])
+                this.isLoading()
                 axios
                     .post('./api/uploadImage.php', formData, {
                         header: {
@@ -23,7 +27,12 @@ export default class EditorImages {
                     })
                     .then(response => {
                         this.virtualElement.src = this.element.src = `./img/${response.data.src}`
+
+                    })
+                    .catch(() => this.showNotifications('Ошибка сохранения', 'danger'))
+                    .finally(() => {
                         this.imgUploader.value = ''
+                        this.isLoaded()
                     })
 
             }
