@@ -9,6 +9,7 @@ import ConfirmModal from '../confirm-modal'
 import ChooseModal from '../choose-modal'
 import Panel from '../panel'
 import EditorMeta from '../editor-meta'
+import EditorImages from '../editor-images/editor-images'
 
 export default class Editor extends Component {
     constructor() {
@@ -50,6 +51,8 @@ export default class Editor extends Component {
             .get(`../${page}?rnd=${Math.random()}`)
             .then(res => DOMHelper.parseStrToDOM(res.data))
             .then(DOMHelper.wrapTextNodes)
+            .then(DOMHelper.wrapImages)
+            .then(DOMHelper.wrapTextNodes)
             .then(dom => {
                 this.virtualDom = dom
                 return dom
@@ -69,6 +72,7 @@ export default class Editor extends Component {
         this.isLoading()
         const newDom = this.virtualDom.cloneNode(this.virtualDom)
         DOMHelper.unwrapTextNodes(newDom)
+        DOMHelper.unwrapImages(newDom)
         const html = DOMHelper.serializeDOMToString(newDom)
         await axios
             .post('./api/savePage.php', {pageName: this.currentPage, html})
@@ -86,6 +90,13 @@ export default class Editor extends Component {
 
             new EditorText(element, virtualElement)
         })
+
+        this.iframe.contentDocument.body.querySelectorAll('[editableimgid]').forEach(element => {
+            const id = element.getAttribute('editableimgid')
+            const virtualElement = this.virtualDom.body.querySelector(`[editableimgid="${id}"]`)
+
+            new EditorImages(element, virtualElement)
+        })
     }
 
     injectStyles() {
@@ -97,6 +108,10 @@ export default class Editor extends Component {
             }
             text-editor:focus {
                 outline: 3px solid red;
+                outline-offset: 8px;
+            }
+            [editableimgid]:hover {
+                outline: 3px solid orange;
                 outline-offset: 8px;
             }
         `
@@ -120,7 +135,12 @@ export default class Editor extends Component {
 
     restoreBackup(e, backup) {
         if (e) e.preventDefault()
-        UIkit.modal.confirm('Восстановить из резервной копии. Вы уверены?', {labels: {ok: 'Восстановить', cancel: 'Отмена'}})
+        UIkit.modal.confirm('Восстановить из резервной копии. Вы уверены?', {
+            labels: {
+                ok: 'Восстановить',
+                cancel: 'Отмена'
+            }
+        })
             .then(() => {
                 this.isLoading()
                 return axios
@@ -155,6 +175,8 @@ export default class Editor extends Component {
             <>
                 <iframe src="" frameBorder="0"/>
 
+                <input id="img-upload" type="file" accept="image/*" style={{display: 'none'}}/>
+
                 {spinner}
 
                 <Panel/>
@@ -162,8 +184,13 @@ export default class Editor extends Component {
                 <ConfirmModal modal={modal} target={'modal-save'} method={this.save}/>
                 <ChooseModal modal={modal} target={'modal-open'} data={pageList} redirect={this.init}/>
                 <ChooseModal modal={modal} target={'modal-backup'} data={backupsList} redirect={this.restoreBackup}/>
-                {this.virtualDom ? <EditorMeta modal={modal} target={'modal-meta'} virtualDom={this.virtualDom}/> : false}
+                {
+                    this.virtualDom
+                        ? <EditorMeta modal={modal} target={'modal-meta'} virtualDom={this.virtualDom}/>
+                        : false
+                }
             </>
         )
     }
+
 }
